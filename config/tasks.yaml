@@ -1,0 +1,32 @@
+research_task:
+  description: >
+    Investigate {topic} using search tools. Gather 5 to 8 concrete facts, 
+    metrics, real-world case studies, and primary source links.
+    Focus on underlying architecture, industry adoption, and practical challenges.
+  expected_output: >
+    A structured markdown research dossier featuring:
+    1. Executive Overview
+    2. 5-8 Key Empirical Findings with Source Links
+    3. Technical Architecture Breakdown
+    4. Curated List of Verified Reference URLs
+
+writing_task:
+  description: >
+    Using the research dossier provided by the research task, write a comprehensive 
+    technical article on {topic}. Follow this structure: Title, Executive Summary, 
+    Deep Dive Analysis, Practical Implementation / Use Cases, Challenges & Trade-offs, 
+    and Future Outlook. The article must be 1,000 to 1,500 words long and use clean Markdown.
+  expected_output: >
+    A complete markdown draft between 1,000 and 1,500 words including all structural 
+    sections, inline citations, and analytical depth. Output ONLY the markdown content.
+
+editing_task:
+  description: >
+    Perform a complete editorial review of the drafted article. Cross-examine claims 
+    against the research dossier, verify logical transitions, fix formatting flaws, 
+    and produce the final publication version.
+    IMPORTANT: Output ONLY the final article in raw Markdown. Do NOT include any function 
+    calls, JSON blocks, or conversational commentary explaining what you did.
+  expected_output: >
+    A publication-ready markdown article with verified citations, cohesive tone, 
+    and precise technical accuracy.
