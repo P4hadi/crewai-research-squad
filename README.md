@@ -42,51 +42,39 @@ This project completely automates this pipeline using **CrewAI** and **LiteLLM**
 
 ## 🏗️ System Architecture & Agent Workflow
 
-The automation executes a multi-stage sequential pipeline where output flows forward deterministically:
+The application runs as a **sequential three-stage pipeline** (not manager-led delegation), where each stage receives explicit context from earlier work:
 
 ```mermaid
 flowchart TD
-    User([User Prompt / CLI Input]) --> Main[main.py: CLI Entrypoint]
-    Main --> InitCrew[HierarchicalResearchCrew Initialization]
-    
-    subgraph Agents & Tasks Pipeline
-        direction TB
-        
-        subgraph Stage 1: Discovery
-            Researcher["🕵️ Senior Technical Researcher\n(DuckDuckGo & ScrapeWebsiteTool)"]
-            Task1["📋 research_task\n- 5 to 8 empirical facts\n- Technical benchmarks\n- Verified primary URLs"]
-            Researcher --> Task1
-        end
-
-        subgraph Stage 2: Synthesis & Drafting
-            Writer["✍️ Lead Technical Writer\n(Deep Synthesis & Technical Prose)"]
-            Task2["📋 writing_task\n- Executive Summary & Architecture\n- Real-world Implementation\n- 1,000 to 1,500 words"]
-            Writer --> Task2
-        end
-
-        subgraph Stage 3: Audit & Publication
-            Editor["🧐 Executive Editorial Reviewer\n(Fact Verification & Grammar Polish)"]
-            Task3["📋 editing_task\n- Cross-check citations vs. research\n- Remove conversational filler\n- Final publication-ready Markdown"]
-            Editor --> Task3
-        end
-
-        Task1 -->|Research Dossier Context| Task2
-        Task1 -->|Primary Source URLs| Task3
-        Task2 -->|Draft Article Context| Task3
-    end
-
-    InitCrew --> Stage 1
-    Stage 3 --> OutFile["📁 output/{topic}_{timestamp}.md"]
-    Stage 3 --> OutLog["📄 output/crew_execution.log"]
+    A[User provides topic via CLI args or interactive prompt in main.py] --> B[Load .env and resolve LLM provider/model]
+    B --> C[Initialize HierarchicalResearchCrew and build agents/tasks]
+    C --> D[Stage 1: Research Task]
+    D --> D1[Senior Technical Researcher uses DuckDuckGo search and website scraping]
+    D1 --> E[Stage 2: Technical Writing Task]
+    D -->|Research context| E
+    E --> F[Stage 3: Editorial Review Task]
+    D -->|Research context| F
+    E -->|Draft context| F
+    F --> G[Publish final Markdown article to output/topic_timestamp.md]
+    F --> H[Write execution log to output/crew_execution.log]
 ```
+
+In practice, this means:
+
+1. `main.py` accepts the topic from command-line arguments (or prompts interactively), loads environment variables, and determines the configured LLM provider.
+2. The crew is initialized with provider-specific LLM settings and three specialist agents.
+3. **Stage 1 (Research):** the researcher collects evidence using DuckDuckGo search plus website scraping.
+4. **Stage 2 (Drafting):** the writer receives the research task as explicit context and produces the technical draft.
+5. **Stage 3 (Editing):** the editor receives both the research context and the draft context, verifies quality/factual consistency, and writes the final Markdown output.
+6. Artifacts are persisted as a timestamped article in `output/` and a run trace in `output/crew_execution.log`.
 
 ### Agent Roles
 
-| Agent | Core Responsibility | Equipped Tools | Output Produced |
-| :--- | :--- | :--- | :--- |
-| **Senior Technical Researcher** | Explores live technical sources, discovers verified benchmarks, and filters marketing fluff. | `free_web_search`, `scrape_tool` | Structured Markdown research dossier with 5-8 verified facts and source URLs. |
-| **Lead Technical Writer** | Ingests the research dossier and authors an authoritative 1,000–1,500 word article. | *None (Pure Synthesis)* | Full structural draft (Executive Summary, Deep Dive, Trade-offs, Future Outlook). |
-| **Executive Editorial Reviewer** | Verifies factual claims against citations, audits grammar and tone, and produces final markdown. | *None (Editorial Logic)* | Clean, publication-ready Markdown article written directly to the target output file. |
+| Agent | Core Responsibility | Equipped Tools | Context Inputs | Output Produced |
+| :--- | :--- | :--- | :--- | :--- |
+| **Senior Technical Researcher** | Gathers verified technical findings, benchmarks, and source links. | `free_web_search`, `scrape_tool` | Topic input from `main.py` kickoff | Research dossier for downstream stages |
+| **Lead Technical Writer** | Converts research findings into a coherent technical article draft. | *None (Pure Synthesis)* | Research task output (`context=[research_task]`) | Structured draft article |
+| **Executive Editorial Reviewer** | Verifies factual consistency, improves clarity, and finalizes publishable Markdown. | *None (Editorial Logic)* | Research + writing outputs (`context=[research_task, writing_task]`) | Final Markdown written to `output/{topic}_{timestamp}.md` |
 
 ---
 
